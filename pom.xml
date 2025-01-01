@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>co.tevent</groupId>
-    <artifactId>tvnt-identity-service</artifactId>
+    <artifactId>boilerplate-java</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>tevent-identity</name>
     <description>Service Identity</description>

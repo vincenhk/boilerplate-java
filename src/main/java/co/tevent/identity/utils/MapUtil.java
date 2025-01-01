@@ -1,5 +1,7 @@
 package co.tevent.identity.utils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
@@ -7,14 +9,26 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.Field;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 
 @Component
-public class GenericMapperUtil {
+public class MapUtil {
 
     private static ModelMapper modelMapper = new ModelMapper();
+    private static ObjectMapper objectMapper = new ObjectMapper();
+
+    public static <T> String objectToJson(T Object) throws JsonProcessingException {
+        return objectMapper.writeValueAsString(Object);
+    }
+
+    public static <T> T jsonToObject(String json, Class<T> Object) throws JsonProcessingException {
+        return objectMapper.readValue(json, Object);
+    }
 
     /**
      * Dto to Entity
@@ -95,5 +109,25 @@ public class GenericMapperUtil {
         } catch (Exception e) {
             throw new RuntimeException("Error mapping objects", e);
         }
+    }
+
+    /**
+     * Build additional claims data!
+     * @param data, contain data Object
+     * @return Maps<String, Object>
+     */
+    public static <T> Map<String, Object> listToMap(T data) {
+        Map<String, Object> claims = new HashMap<>();
+        Field[] fields = data.getClass().getDeclaredFields();
+        for (Field field : fields) {
+            field.setAccessible(true);
+            try {
+                Object value = field.get(data);
+                claims.put(field.getName(), value);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
+        return claims;
     }
 }

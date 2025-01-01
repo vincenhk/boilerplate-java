@@ -1,31 +1,29 @@
 package co.tevent.identity.utils;
 
-import co.tevent.identity.dto.request.UserFormRequestDto;
 import io.jsonwebtoken.Jwts;
-import jakarta.annotation.PostConstruct;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-import java.lang.reflect.Field;
 import java.util.Base64;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 
-import org.slf4j.Logger;
-
+@Log4j2
 @Component
-public class jwtUtil {
-
+public class JwtUtil {
 
     @Value("${security.jwt.secret-key}")
     private String secretKey;
 
+    @Value("${security.jwt.expiration-time}")
+    private long expirationTime;
+
     private static SecretKey key;
 
-    @PostConstruct
+//    @PostConstruct
     public void initJwt() {
         try {
             byte[] decodedKey = Base64.getDecoder().decode(secretKey);
@@ -37,27 +35,19 @@ public class jwtUtil {
         }
     }
 
-    public static String generateToken(String email, Map<String, Object> claims) {
+    /**
+     * Build token using email and additional claims
+     * @param email, contain String email login
+     * @param claims, contain Map from additional data used
+     * @return String
+     */
+    public String buildToken(String email, Map<String, Object> claims) {
         return Jwts.builder()
                 .setSubject(email)
                 .setClaims(claims)
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(key)
                 .compact();
-    }
-
-    public static <T> Map<String, Object> toClaims(T data) throws Exception {
-        Map<String, Object> claims = new HashMap<>();
-        Field[] fields = data.getClass().getDeclaredFields();
-        for (Field field : fields) {
-            field.setAccessible(true);
-            try {
-                Object value = field.get(data);
-                claims.put(field.getName(), value);
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
-        }
-        return claims;
     }
 }
